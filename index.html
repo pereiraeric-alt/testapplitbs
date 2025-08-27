@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Évaluation IA Générative - TBS Education</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+</head>
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="container">
+                <div class="header-content">
+                    <h1 class="logo">TBS Education</h1>
+                    <nav class="nav" id="main-nav">
+                        <button class="btn btn--outline btn--sm" id="home-btn">Accueil</button>
+                        <button class="btn btn--outline btn--sm" id="admin-btn">Administration</button>
+                    </nav>
+                </div>
+            </div>
+        </header>
+
+        <!-- Page d'accueil -->
+        <div id="home-view" class="view active">
+            <div class="container">
+                <div class="hero">
+                    <h2>Évaluation des Besoins en IA Générative</h2>
+                    <p class="hero-subtitle">Application d'évaluation ludique pour formateurs</p>
+                </div>
+
+                <div class="content-grid">
+                    <!-- Section Administrateur -->
+                    <div class="card admin-section">
+                        <div class="card__body">
+                            <h3>👨‍💼 Espace Administrateur</h3>
+                            <p>Gérez les sessions d'évaluation et consultez les résultats</p>
+                            <div class="admin-controls">
+                                <button class="btn btn--primary" id="new-session-btn">Nouvelle Session</button>
+                                <button class="btn btn--secondary" id="import-btn">Importer Session</button>
+                                <input type="file" id="import-file" accept=".json" style="display: none;">
+                            </div>
+                            <div class="session-info" id="session-info" style="display: none;">
+                                <div class="status status--success">Session active</div>
+                                <p><strong>Code de session:</strong> <span id="session-code"></span></p>
+                                <p><strong>Participants connectés:</strong> <span id="participant-count">0</span></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section Participants -->
+                    <div class="card participant-section">
+                        <div class="card__body">
+                            <h3>👥 Espace Participants</h3>
+                            <p>Scannez le QR code ou utilisez le code de connexion</p>
+                            
+                            <div class="connection-methods">
+                                <div class="qr-section">
+                                    <h4>Scanner le QR Code</h4>
+                                    <div id="qr-code" class="qr-container"></div>
+                                </div>
+                                
+                                <div class="code-section">
+                                    <h4>Code de Connexion</h4>
+                                    <div class="connection-code" id="connection-code">-</div>
+                                    <p class="instruction">Entrez ce code sur la page participant</p>
+                                    <button class="btn btn--outline" id="participant-access-btn">Accès Participant</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Instructions -->
+                <div class="card instructions-card">
+                    <div class="card__body">
+                        <h3>📋 Instructions</h3>
+                        <div class="instructions-grid">
+                            <div class="instruction-item">
+                                <div class="instruction-number">1</div>
+                                <p>L'administrateur lance une nouvelle session</p>
+                            </div>
+                            <div class="instruction-item">
+                                <div class="instruction-number">2</div>
+                                <p>Les participants scannent le QR code ou saisissent le code</p>
+                            </div>
+                            <div class="instruction-item">
+                                <div class="instruction-number">3</div>
+                                <p>Chaque participant répond au questionnaire (20 questions, 15s par question)</p>
+                            </div>
+                            <div class="instruction-item">
+                                <div class="instruction-number">4</div>
+                                <p>Les résultats sont analysés en temps réel</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page Participant -->
+        <div id="participant-view" class="view">
+            <div class="container">
+                <!-- Connexion -->
+                <div id="participant-connect" class="connect-section">
+                    <div class="card">
+                        <div class="card__body">
+                            <h2>Connexion Participant</h2>
+                            <div class="form-group">
+                                <label class="form-label" for="session-code-input">Code de Session</label>
+                                <input type="text" id="session-code-input" class="form-control" placeholder="Entrez le code de session" maxlength="6">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="participant-name">Votre Nom</label>
+                                <input type="text" id="participant-name" class="form-control" placeholder="Entrez votre nom" required>
+                            </div>
+                            <button class="btn btn--primary btn--full-width" id="connect-btn">Se Connecter</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quiz -->
+                <div id="participant-quiz" class="quiz-section" style="display: none;">
+                    <div class="quiz-header">
+                        <div class="quiz-progress">
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progress-fill"></div>
+                            </div>
+                            <span class="progress-text" id="progress-text">Question 1/20</span>
+                        </div>
+                        <div class="timer" id="timer">15</div>
+                    </div>
+
+                    <div class="card quiz-card">
+                        <div class="card__body">
+                            <h3 class="question-title" id="question-title">Question en cours de chargement...</h3>
+                            <div class="answers" id="answers">
+                                <!-- Options de réponse générées dynamiquement -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Résultat -->
+                <div id="participant-result" class="result-section" style="display: none;">
+                    <div class="card">
+                        <div class="card__body text-center">
+                            <h2>🎉 Évaluation Terminée !</h2>
+                            <p>Merci <strong id="result-name"></strong> pour votre participation.</p>
+                            <p>Vos résultats sont maintenant disponibles pour l'administrateur.</p>
+                            <div class="final-score">
+                                <h3>Votre Score: <span id="final-score">-/20</span></h3>
+                                <div class="level-badge" id="level-badge">-</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page Administrateur -->
+        <div id="admin-view" class="view">
+            <div class="container">
+                <!-- Authentification -->
+                <div id="admin-auth" class="auth-section">
+                    <div class="card">
+                        <div class="card__body">
+                            <h2>Authentification Administrateur</h2>
+                            <div class="form-group">
+                                <label class="form-label" for="admin-password">Mot de passe</label>
+                                <input type="password" id="admin-password" class="form-control" placeholder="Entrez le mot de passe">
+                            </div>
+                            <button class="btn btn--primary btn--full-width" id="admin-login-btn">Se Connecter</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dashboard -->
+                <div id="admin-dashboard" class="dashboard-section" style="display: none;">
+                    <div class="dashboard-header">
+                        <h2>Dashboard des Résultats</h2>
+                        <div class="dashboard-actions">
+                            <button class="btn btn--secondary" id="export-json-btn">Export JSON</button>
+                            <button class="btn btn--secondary" id="export-csv-btn">Export CSV</button>
+                            <button class="btn btn--outline" id="reset-session-btn">Réinitialiser</button>
+                        </div>
+                    </div>
+
+                    <!-- Statistiques générales -->
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value" id="total-participants">0</div>
+                            <div class="stat-label">Participants</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="avg-score">-</div>
+                            <div class="stat-label">Score Moyen</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="completion-rate">0%</div>
+                            <div class="stat-label">Taux de Completion</div>
+                        </div>
+                    </div>
+
+                    <!-- Graphiques -->
+                    <div class="charts-grid">
+                        <div class="chart-container" style="position: relative; height: 300px;">
+                            <h3>Distribution des Scores</h3>
+                            <canvas id="scores-chart"></canvas>
+                        </div>
+                        <div class="chart-container" style="position: relative; height: 300px;">
+                            <h3>Compétences par Objectif</h3>
+                            <canvas id="objectives-chart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Liste des participants -->
+                    <div class="card">
+                        <div class="card__body">
+                            <h3>Détail des Participants</h3>
+                            <div class="table-container">
+                                <table class="participants-table" id="participants-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Nom</th>
+                                            <th>Score Global</th>
+                                            <th>Objectif 1</th>
+                                            <th>Objectif 2</th>
+                                            <th>Objectif 3</th>
+                                            <th>Objectif 4</th>
+                                            <th>Niveau</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="participants-tbody">
+                                        <!-- Généré dynamiquement -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recommandations détaillées -->
+                    <div id="participant-details" class="card participant-details" style="display: none;">
+                        <div class="card__body">
+                            <h3>Analyse Détaillée: <span id="detail-name"></span></h3>
+                            <div class="details-content">
+                                <div class="score-breakdown">
+                                    <h4>Répartition des Scores</h4>
+                                    <div id="score-details"></div>
+                                </div>
+                                <div class="recommendations">
+                                    <h4>Recommandations Personnalisées</h4>
+                                    <div id="participant-recommendations"></div>
+                                </div>
+                            </div>
+                            <button class="btn btn--outline" id="close-details-btn">Fermer</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal pour les alertes -->
+    <div id="modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-body">
+                <p id="modal-message"></p>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn--primary" id="modal-ok-btn">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
